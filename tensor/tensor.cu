@@ -334,7 +334,7 @@ bool SimpleTensor<T>::getRequiresGrad() {
     return requiresGrad_;
 }
 
-// move signatures implementation
+// copy constructor implementation
 template <typename T>
 SimpleTensor<T>::SimpleTensor(const SimpleTensor<T>& other) {
     dimension_ = other.dimension_;
@@ -342,7 +342,7 @@ SimpleTensor<T>::SimpleTensor(const SimpleTensor<T>& other) {
     shape_ = other.shape_;
     stride_ = other.stride_;
     requiresGrad_ = other.requiresGrad_;
-    backward_ = other.backward_;
+    gradNode_ = other.gradNode_;
 
     CUDA_CHECK(cudaMalloc(&dataBuffer_, size_*sizeof(T)));
     CUDA_CHECK(cudaMemcpy(dataBuffer_, other.dataBuffer_, size_* sizeof(T), cudaMemcpyDeviceToDevice));
@@ -367,7 +367,7 @@ SimpleTensor<T>& SimpleTensor<T>::operator=(const SimpleTensor<T>& other) {
     shape_ = other.shape_;
     stride_ = other.stride_;
     requiresGrad_ = other.requiresGrad_;
-    backward_ = other.backward_;
+    gradNode_ = other.gradNode_;
 
     CUDA_CHECK(cudaMalloc(&dataBuffer_, size_ * sizeof(T)));
     CUDA_CHECK(cudaMemcpy(dataBuffer_, other.dataBuffer_, size_ * sizeof(T), cudaMemcpyDeviceToDevice));
@@ -389,7 +389,7 @@ SimpleTensor<T>::SimpleTensor(SimpleTensor<T>&& other) noexcept {
     shape_ = std::move(other.shape_);
     stride_ = std::move(other.stride_);
     requiresGrad_ = other.requiresGrad_;
-    backward_ = std::move(other.backward_);
+    gradNode_ = std::move(other.gradNode_);
     
     dataBuffer_ = other.dataBuffer_;
     gradBuffer_ = other.gradBuffer_;
@@ -412,7 +412,7 @@ SimpleTensor<T>& SimpleTensor<T>::operator=(SimpleTensor<T>&& other) noexcept {
     stride_ = std::move(other.stride_);
     requiresGrad_ = other.requiresGrad_;
 
-    backward_ = std::move(other.backward_);
+    gradNode_ = std::move(other.gradNode_);
     dataBuffer_ = other.dataBuffer_;
     gradBuffer_ = other.gradBuffer_;
     
