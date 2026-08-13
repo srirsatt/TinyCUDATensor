@@ -16,6 +16,14 @@ getters & setters, of course!
 #include <vector>
 #include <stdexcept>
 #include <functional>
+#include <memory>
+
+struct GradNode {
+    std::function<void()> backward_fn;
+    std::vector<std::shared_ptr<GradNode>> inputs;
+    int pending = 0;
+};
+
 
 template <typename T>
 class SimpleTensor {
@@ -37,8 +45,8 @@ class SimpleTensor {
         int getDimension();
         int getSize();
         bool getRequiresGrad();
-        void backward(); // backward pass for autograd
-        std::function<void()> backward_; // backward pass recursive helper - calculates actual gradient values and recursion
+        void backward(); // backward pass for autograd // backward pass recursive helper - calculates actual gradient values and recursion
+        std::shared_ptr<GradNode> getGradNode() { return gradNode_; }
         // deep copy signatures
         SimpleTensor(const SimpleTensor<T>& other);
         SimpleTensor<T>& operator=(const SimpleTensor<T>& other);
@@ -56,4 +64,5 @@ class SimpleTensor {
         T* gradBuffer_; // holds gradients from AutoGrad production
         std::vector<int> shape_; // CPU
         std::vector<int> stride_;
+        std::shared_ptr<GradNode> gradNode_;
 };
