@@ -141,16 +141,16 @@ SimpleTensor<T> elementOp(SimpleTensor<T>& a, SimpleTensor<T>& b, ElementWiseOp 
     T* gradC = outputTensor.getGradBuffer();
     int size = a.getSize();
 
-    outputTensor.backward_ = [&a, &b, gradC, size, operation]() {
+    auto node = std::make_shared<GradNode>();
+    node->inputs = {a.getGradNode(), b.getGradNode()};
+    node->backward_fn = [&a, &b, gradC, size, operation]() {
         int threads = 256;
         int blocks = (size + threads - 1) / threads;
-        
 
         switch (operation) {
             case ElementWiseOp::ADD:
                 if (a.getRequiresGrad()) {
                     addBackwardKernel<<<blocks, threads>>>(a.getGradBuffer(), gradC, size);
-
                 }
                 if (b.getRequiresGrad()) {
                     addBackwardKernel<<<blocks, threads>>>(b.getGradBuffer(), gradC, size);
@@ -165,15 +165,9 @@ SimpleTensor<T> elementOp(SimpleTensor<T>& a, SimpleTensor<T>& b, ElementWiseOp 
                 }
                 break;
         }
-
-        if (a.backward_) {
-            a.backward_();
-        }
-        if (b.backward_) {
-            b.backward_();
-        }
     };
 
+    outputTensor.gradNode_ = node;
 
     return outputTensor;
 }
@@ -317,16 +311,17 @@ SimpleTensor<T> reduceOp(SimpleTensor<T> &a, ReduceOp operation) {
     T* gradC = outputTensor.getGradBuffer();
     int inputSize = a.getSize();
 
-    outputTensor.backward_ = [&a, gradC, inputSize]() {
+    auto node = std::make_shared<GradNode>();
+    node->inputs = {a.getGradNode()};
+    node->backward_fn = [&a, gradC, inputSize]() {
         if (a.getRequiresGrad()) {
             int threads = 256;
             int blocks = (inputSize + threads - 1) / threads;
             accumulateGradScalar<<<blocks, threads>>>(a.getGradBuffer(), gradC, inputSize);
         }
-        if (a.backward_) {
-            a.backward_();
-        }
     };
+
+    outputTensor.gradNode_ = node;
 
     return outputTensor;
 }
@@ -445,7 +440,9 @@ SimpleTensor<T> tiledMatmul(SimpleTensor<T> &a, SimpleTensor<T> &b) {
     int sizeB = b.getSize();
     
     
-    outputTensor.backward_ = [&a, &b, gradC, M, N, K, sizeA, sizeB]() {
+    auto node = std::make_shared<GradNode>();
+    node->inputs = {a.getGradNode(), b.getGradNode()};
+    node->backward_fn = [&a, &b, gradC, M, N, K, sizeA, sizeB]() {
         if (a.getRequiresGrad()) {
             T* bTranspose;
             CUDA_CHECK(cudaMalloc(&bTranspose, sizeB*sizeof(T)));
@@ -497,14 +494,9 @@ SimpleTensor<T> tiledMatmul(SimpleTensor<T> &a, SimpleTensor<T> &b) {
             cudaFree(tempB);
             cudaFree(aTranspose);
         }
-
-        if (a.backward_) {
-            a.backward_();
-        }
-        if (b.backward_) {
-            b.backward_();
-        }
     };
+
+    outputTensor.gradNode_ = node;
 
 
     return outputTensor;
@@ -545,17 +537,17 @@ SimpleTensor<T> reluForward(SimpleTensor<T> &a) {
     T* inputData = a.getBuffer();
     int size = a.getSize();
 
-    outputTensor.backward_ = [&a, gradC, inputData, size]() {
+    auto node = std::make_shared<GradNode>();
+    node->inputs = {a.getGradNode()};
+    node->backward_fn = [&a, gradC, inputData, size]() {
         if (a.getRequiresGrad()) {
             int threads = 256;
             int blocks = (size + threads - 1) / threads;
             reluBackwardKernel<<<blocks, threads>>>(a.getGradBuffer(), gradC, inputData, size);
         }
-
-        if (a.backward_) {
-            a.backward_();
-        }
     };
+
+    outputTensor.gradNode_ = node;
 
 
     return outputTensor;
