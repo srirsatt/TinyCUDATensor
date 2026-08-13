@@ -167,7 +167,7 @@ SimpleTensor<T> elementOp(SimpleTensor<T>& a, SimpleTensor<T>& b, ElementWiseOp 
         }
     };
 
-    outputTensor.gradNode_ = node;
+    outputTensor.setGradNode(node);
 
     return outputTensor;
 }
@@ -321,7 +321,7 @@ SimpleTensor<T> reduceOp(SimpleTensor<T> &a, ReduceOp operation) {
         }
     };
 
-    outputTensor.gradNode_ = node;
+    outputTensor.setGradNode(node);
 
     return outputTensor;
 }
@@ -496,7 +496,7 @@ SimpleTensor<T> tiledMatmul(SimpleTensor<T> &a, SimpleTensor<T> &b) {
         }
     };
 
-    outputTensor.gradNode_ = node;
+    outputTensor.setGradNode(node);
 
 
     return outputTensor;
@@ -547,7 +547,7 @@ SimpleTensor<T> reluForward(SimpleTensor<T> &a) {
         }
     };
 
-    outputTensor.gradNode_ = node;
+    outputTensor.setGradNode(node);
 
 
     return outputTensor;

@@ -47,6 +47,7 @@ class SimpleTensor {
         bool getRequiresGrad();
         void backward(); // backward pass for autograd // backward pass recursive helper - calculates actual gradient values and recursion
         std::shared_ptr<GradNode> getGradNode() { return gradNode_; }
+        void setGradNode(std::shared_ptr<GradNode> node) { gradNode_ = node; }
         // deep copy signatures
         SimpleTensor(const SimpleTensor<T>& other);
         SimpleTensor<T>& operator=(const SimpleTensor<T>& other);
