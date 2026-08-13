@@ -161,16 +161,23 @@ void topoSort(std::shared_ptr<GradNode> node, std::unordered_set<GradNode*>& vis
 
 template <typename T>
 void SimpleTensor<T>::backward() {
-    if (requiresGrad_) {
-        // to check if we have an empty leaf function, and if requiresGrad_ is true - for autograd computation in the first place
-            int threads = 256;
-            int blocks = (size_ + threads - 1) / threads;
+    // fill our grad with 1.0 to initialize before backwards pass
 
-            fillKernel<<<blocks, threads>>>(gradBuffer_, (T)1.0f, size_);
+    if (gradBuffer_) {
+        int threads = 256;
+        int blocks = (size_ + threads - 1) / threads;
+        fillKernel<<<blocks, threads>>>(gradBuffer_, (T)1.0f, size_);
+        cudaDeviceSynchronize();
     }
 
-    if (backward_) {
-        backward_();
+    std::vector<std::shared_ptr<GradNode>> order;
+    std::unordered_set<GradNode*> visited;
+    topoSort(gradNode_, visited, order);
+
+    for (int i = order.size() - 1; i >= 0; i--) {
+        if (order[i]->backward_fn) {
+            order[i]->backward_fn();
+        }
     }
 }
 
