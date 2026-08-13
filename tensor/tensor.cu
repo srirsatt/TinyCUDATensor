@@ -18,6 +18,8 @@ getters & setters, of course!
 #include <iostream>
 #include <vector>
 #include <stdexcept> // for exceptions
+#include <unordered_set>
+#include <algorithm>
 
 #define CUDA_CHECK(call) { \
     cudaError_t err = call; \
@@ -140,6 +142,21 @@ __global__ void fillKernel(T* buf, T val, int size) {
         buf[i] = val;
     }
 }
+
+
+void topoSort(std::shared_ptr<GradNode> node, std::unordered_set<GradNode*>& visited, std::vector<std::shared_ptr<GradNode>>& order) {
+    if (!node || visited.count(node.get())) return;
+
+
+    visited.insert(node.get());
+
+    for (auto& input: node->inputs) {
+        topoSort(input, visited, order);
+    }
+
+    order.push_back(node);
+}
+
 
 
 template <typename T>
