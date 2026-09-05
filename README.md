@@ -1,6 +1,6 @@
-# SimpleTensor
+# TinyCUDATensor
 
-SimpleTensor is a small tensor library written in CUDA C++. It keeps tensor data on the GPU, launches custom CUDA kernels for common operations, and records a lightweight computation graph for reverse-mode automatic differentiation.
+TinyCUDATensor is a small tensor library written in CUDA C++. It keeps tensor data on the GPU, launches custom CUDA kernels for common operations, and records a lightweight computation graph for reverse-mode automatic differentiation.
 
 The project is intentionally compact: the tensor implementation, CUDA kernels, and autograd machinery can all be read without working through a large framework first. It is best suited to learning, kernel experimentation, and benchmarking rather than production workloads.
 
@@ -22,7 +22,7 @@ The project is intentionally compact: the tensor implementation, CUDA kernels, a
 
 ```mermaid
 flowchart LR
-    H[Host data] -->|cudaMemcpy H2D| T[SimpleTensor]
+    H[Host data] -->|cudaMemcpy H2D| T[TinyCUDATensor]
     T --> D[(Device data buffer)]
     T --> G[(Optional gradient buffer)]
     T --> M[Shape and stride metadata]
@@ -104,8 +104,8 @@ int main() {
         7.0f, 8.0f
     };
 
-    SimpleTensor<float> a({2, 2}, 2, aData, true);
-    SimpleTensor<float> b({2, 2}, 2, bData, true);
+    TinyCUDATensor<float> a({2, 2}, 2, aData, true);
+    TinyCUDATensor<float> b({2, 2}, 2, bData, true);
 
     auto product = tiledMatmul(a, b);
     auto loss = reduceOp(product, ReduceOp::SUM);
@@ -135,8 +135,8 @@ nvcc -std=c++17 -O2 example.cu tensor/tensor.cu tensor/ops.cu -o example
 
 | API | Description |
 | --- | --- |
-| `SimpleTensor(shape, dimensions, data, requiresGrad)` | Allocates device memory and copies a host buffer to it |
-| `SimpleTensor(shape, dimensions, requiresGrad)` | Allocates a zero-initialized device buffer |
+| `TinyCUDATensor(shape, dimensions, data, requiresGrad)` | Allocates device memory and copies a host buffer to it |
+| `TinyCUDATensor(shape, dimensions, requiresGrad)` | Allocates a zero-initialized device buffer |
 | `reshape(shape, dimensions)` | Changes metadata without moving data; element count must remain unchanged |
 | `setBuffer(data, size)` | Replaces tensor values from a host buffer |
 | `toHost()` | Copies tensor values into a host `std::vector` |
@@ -161,7 +161,7 @@ Element-wise operations require identical input shapes. Matrix multiplication ac
 
 ## Matrix multiplication kernels
 
-SimpleTensor includes two implementations of the same 2D operation:
+TinyCUDATensor includes two implementations of the same 2D operation:
 
 ```mermaid
 flowchart TD
@@ -193,7 +193,7 @@ The naive kernel is a direct reference implementation: one thread computes one o
 
 ## Current scope
 
-SimpleTensor is an experimental implementation with a deliberately narrow API. It currently assumes contiguous storage, does not broadcast shapes, and does not provide a CPU fallback. Autograd covers the operations listed in the table above; using another operation in a differentiable chain will not propagate a mathematically complete gradient.
+TinyCUDATensor is an experimental implementation with a deliberately narrow API. It currently assumes contiguous storage, does not broadcast shapes, and does not provide a CPU fallback. Autograd covers the operations listed in the table above; using another operation in a differentiable chain will not propagate a mathematically complete gradient.
 
 CUDA calls made during allocation and host transfers are checked immediately. Kernel launches are generally asynchronous, so call `cudaDeviceSynchronize()` when measuring execution time or when an immediate kernel error must be surfaced.
 
