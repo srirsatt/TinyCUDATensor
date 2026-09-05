@@ -1,5 +1,8 @@
 # TinyCUDATensor
 
+[![CUDA C++](https://img.shields.io/badge/CUDA-C%2B%2B-76B900?logo=nvidia&logoColor=white)](https://developer.nvidia.com/cuda-toolkit)
+[![C++17](https://img.shields.io/badge/C%2B%2B-17-00599C?logo=cplusplus&logoColor=white)](https://isocpp.org/)
+
 TinyCUDATensor is a small tensor library written in CUDA C++. It keeps tensor data on the GPU, launches custom CUDA kernels for common operations, and records a lightweight computation graph for reverse-mode automatic differentiation.
 
 The project is intentionally compact: the tensor implementation, CUDA kernels, and autograd machinery can all be read without working through a large framework first. It is best suited to learning, kernel experimentation, and benchmarking rather than production workloads.
